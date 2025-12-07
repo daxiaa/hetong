@@ -89,7 +89,6 @@
             position: relative;
             z-index: 2;
             background: #fff;
-            /* 修复输入框内容被遮挡 */
             overflow: visible;
             height: auto;
             min-height: 40px;
@@ -109,18 +108,38 @@
             position: relative;
             z-index: 2;
         }
+        /* 签名板核心样式 - 修复渲染问题 */
         .signature-pad {
             width: 100%;
-            height: 150px;
-            border: 1px solid #ddd;
+            height: 180px; /* 增加高度提升体验 */
+            border: 2px solid #ddd;
             border-radius: 4px;
             margin: 10px 0;
             background: #fff;
             cursor: crosshair;
             position: relative;
-            z-index: 2;
-            /* 修复签名板层级问题 */
+            z-index: 10; /* 确保签名板在最上层 */
             overflow: hidden;
+            touch-action: none; /* 禁用触摸默认行为 */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .signature-pad:active {
+            cursor: crosshair;
+        }
+        /* 签名提示文字 */
+        .signature-hint {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            text-align: center;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 5;
         }
         .btn-group {
             display: flex;
@@ -193,8 +212,8 @@
         }
         .signature-col {
             flex: 1;
+            position: relative;
         }
-        /* 修复打印样式 */
         @media print {
             body {
                 background: #fff;
@@ -212,6 +231,9 @@
             .signature-pad {
                 border: 1px solid #333;
             }
+            .signature-hint {
+                display: none;
+            }
             input[type="text"],
             input[type="tel"],
             input[type="number"],
@@ -227,7 +249,6 @@
                 size: A4;
             }
         }
-        /* 适配移动端 */
         @media (max-width: 768px) {
             .container {
                 padding: 20px 15px;
@@ -253,7 +274,7 @@
                 flex-direction: column;
             }
             .signature-pad {
-                height: 120px;
+                height: 150px;
             }
             input[type="text"],
             input[type="tel"],
@@ -264,7 +285,6 @@
                 font-size: 13px;
             }
         }
-        /* 修复行内输入框布局 */
         .inline-input-group {
             display: flex;
             align-items: center;
@@ -517,16 +537,20 @@
             </div>
         </div>
 
-        <!-- 签名区域 -->
+        <!-- 签名区域 - 重构结构 -->
         <div class="signature-container">
             <h2>签字确认</h2>
             <div class="signature-row">
                 <!-- 甲方签名区域 -->
                 <div class="signature-col">
                     <label>甲方（签字 / 盖章）：</label>
-                    <canvas id="signature-pad-a" class="signature-pad" data-pad="a"></canvas>
+                    <!-- 签名板容器，增加提示文字 -->
+                    <div style="position: relative;">
+                        <canvas id="signature-pad-a" class="signature-pad"></canvas>
+                        <div class="signature-hint" id="hint-a">点击并拖动鼠标/手指签名</div>
+                    </div>
                     <div style="margin-top: 10px;">
-                        <button type="button" class="btn btn-warning" onclick="clearSignature('a')">清除甲方签名</button>
+                        <button type="button" class="btn btn-warning" onclick="clearSignature('a', event)">清除甲方签名</button>
                     </div>
                     <div class="form-group" style="margin-top: 15px;">
                         <label>日期：</label>
@@ -536,9 +560,12 @@
                 <!-- 乙方签名区域 -->
                 <div class="signature-col">
                     <label>乙方（签字 / 盖章）：</label>
-                    <canvas id="signature-pad-b" class="signature-pad" data-pad="b"></canvas>
+                    <div style="position: relative;">
+                        <canvas id="signature-pad-b" class="signature-pad"></canvas>
+                        <div class="signature-hint" id="hint-b">点击并拖动鼠标/手指签名</div>
+                    </div>
                     <div style="margin-top: 10px;">
-                        <button type="button" class="btn btn-warning" onclick="clearSignature('b')">清除乙方签名</button>
+                        <button type="button" class="btn btn-warning" onclick="clearSignature('b', event)">清除乙方签名</button>
                     </div>
                     <div class="form-group" style="margin-top: 15px;">
                         <label>日期：</label>
@@ -557,12 +584,55 @@
     </div>
 
     <script>
-        // 全局变量：防止图片重复保存
+        // 全局变量管理
         let isImageSaving = false;
-        let signatureInstances = { a: null, b: null };
+        // 签名实例对象，存储甲乙双方签名状态
+        const signatureState = {
+            a: {
+                canvas: null,
+                ctx: null,
+                isDrawing: false,
+                lastX: 0,
+                lastY: 0,
+                hasSignature: false
+            },
+            b: {
+                canvas: null,
+                ctx: null,
+                isDrawing: false,
+                lastX: 0,
+                lastY: 0,
+                hasSignature: false
+            }
+        };
 
-        // 初始化日期默认值
+        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 初始化日期默认值
+            initDefaultDates();
+            
+            // 初始化签名板（核心修复）
+            initSignaturePad('a');
+            initSignaturePad('b');
+
+            // 绑定按钮事件
+            bindButtonEvents();
+
+            // 初始化必填字段数组
+            window.requiredFields = [
+                'partyA-name', 'partyA-tel', 'partyB-name', 'partyB-id', 
+                'partyB-tel', 'apartment-name', 'room-number', 'monthly-rent',
+                'deposit', 'lease-start', 'lease-end'
+            ];
+
+            // 初始化输入框事件
+            initInputEvents();
+        });
+
+        /**
+         * 初始化默认日期
+         */
+        function initDefaultDates() {
             const today = new Date();
             const sixMonthsLater = new Date();
             sixMonthsLater.setMonth(today.getMonth() + 6);
@@ -572,12 +642,14 @@
                 return date.toISOString().split('T')[0];
             };
 
-            // 设置默认日期
             const startDateVal = formatDate(today);
             const endDateVal = formatDate(sixMonthsLater);
             
+            // 设置租赁日期
             document.getElementById('lease-start').value = startDateVal;
             document.getElementById('lease-end').value = endDateVal;
+            
+            // 设置签名日期
             document.getElementById('sign-date-a').value = startDateVal;
             document.getElementById('sign-date-b').value = startDateVal;
 
@@ -587,7 +659,7 @@
             const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
             document.getElementById('lease-months').value = months;
 
-            // 监听日期变化，自动计算月数
+            // 监听租赁日期变化，自动计算月数
             const dateInputs = document.querySelectorAll('.lease-date');
             dateInputs.forEach(input => {
                 input.addEventListener('change', function() {
@@ -599,197 +671,344 @@
                     }
                 });
             });
+        }
 
-            // 初始化签名板（修复甲方签名问题）
-            initSignaturePad('a');
-            initSignaturePad('b');
+        /**
+         * 初始化签名板 - 核心修复函数
+         * @param {string} prefix - 签名板标识（a:甲方，b:乙方）
+         */
+        function initSignaturePad(prefix) {
+            try {
+                // 获取画布元素
+                const canvas = document.getElementById(`signature-pad-${prefix}`);
+                if (!canvas) {
+                    console.error(`签名板${prefix}未找到`);
+                    return;
+                }
 
-            // 绑定按钮事件（避免事件委托冲突）
+                // 获取画布上下文
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    console.error(`无法获取签名板${prefix}的2D上下文`);
+                    return;
+                }
+
+                // 存储签名板实例
+                signatureState[prefix].canvas = canvas;
+                signatureState[prefix].ctx = ctx;
+
+                // 修复画布分辨率（适配高清屏）
+                fixCanvasResolution(prefix);
+
+                // 解绑已有事件（防止重复绑定）
+                unbindSignatureEvents(prefix);
+
+                // 绑定签名事件（鼠标+触摸）
+                bindSignatureEvents(prefix);
+
+                // 初始化画布状态
+                resetSignatureCanvas(prefix);
+
+                console.log(`签名板${prefix}初始化完成`);
+            } catch (error) {
+                console.error(`签名板${prefix}初始化失败：`, error);
+            }
+        }
+
+        /**
+         * 修复画布分辨率 - 解决模糊问题
+         * @param {string} prefix - 签名板标识
+         */
+        function fixCanvasResolution(prefix) {
+            const canvas = signatureState[prefix].canvas;
+            const ctx = signatureState[prefix].ctx;
+
+            // 获取画布显示尺寸
+            const rect = canvas.getBoundingClientRect();
+            
+            // 保存当前绘制内容
+            const tempImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // 设置画布实际尺寸（乘以设备像素比）
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // 缩放上下文
+            ctx.scale(dpr, dpr);
+            
+            // 恢复绘制内容
+            if (tempImageData) {
+                ctx.putImageData(tempImageData, 0, 0);
+            }
+        }
+
+        /**
+         * 解绑签名事件
+         * @param {string} prefix - 签名板标识
+         */
+        function unbindSignatureEvents(prefix) {
+            const canvas = signatureState[prefix].canvas;
+            if (!canvas) return;
+
+            // 解绑鼠标事件
+            canvas.removeEventListener('mousedown', (e) => handleSignatureStart(e, prefix));
+            canvas.removeEventListener('mousemove', (e) => handleSignatureMove(e, prefix));
+            canvas.removeEventListener('mouseup', (e) => handleSignatureEnd(e, prefix));
+            canvas.removeEventListener('mouseout', (e) => handleSignatureEnd(e, prefix));
+
+            // 解绑触摸事件
+            canvas.removeEventListener('touchstart', (e) => handleTouchStart(e, prefix));
+            canvas.removeEventListener('touchmove', (e) => handleTouchMove(e, prefix));
+            canvas.removeEventListener('touchend', (e) => handleTouchEnd(e, prefix));
+            canvas.removeEventListener('touchcancel', (e) => handleTouchEnd(e, prefix));
+        }
+
+        /**
+         * 绑定签名事件（鼠标+触摸）
+         * @param {string} prefix - 签名板标识
+         */
+        function bindSignatureEvents(prefix) {
+            const canvas = signatureState[prefix].canvas;
+            if (!canvas) return;
+
+            // 鼠标事件
+            canvas.addEventListener('mousedown', (e) => handleSignatureStart(e, prefix));
+            canvas.addEventListener('mousemove', (e) => handleSignatureMove(e, prefix));
+            canvas.addEventListener('mouseup', (e) => handleSignatureEnd(e, prefix));
+            canvas.addEventListener('mouseout', (e) => handleSignatureEnd(e, prefix));
+
+            // 触摸事件（移动端支持）
+            canvas.addEventListener('touchstart', (e) => handleTouchStart(e, prefix));
+            canvas.addEventListener('touchmove', (e) => handleTouchMove(e, prefix));
+            canvas.addEventListener('touchend', (e) => handleTouchEnd(e, prefix));
+            canvas.addEventListener('touchcancel', (e) => handleTouchEnd(e, prefix));
+        }
+
+        /**
+         * 处理签名开始（鼠标）
+         * @param {MouseEvent} e - 鼠标事件
+         * @param {string} prefix - 签名板标识
+         */
+        function handleSignatureStart(e, prefix) {
+            e.preventDefault();
+            const state = signatureState[prefix];
+            if (!state.ctx) return;
+
+            // 获取画布坐标
+            const { x, y } = getCanvasCoordinates(e, state.canvas);
+            
+            // 更新签名状态
+            state.isDrawing = true;
+            state.lastX = x;
+            state.lastY = y;
+
+            // 绘制起始点（解决点按无反应问题）
+            state.ctx.beginPath();
+            state.ctx.arc(x, y, 1, 0, 2 * Math.PI);
+            state.ctx.fillStyle = '#000';
+            state.ctx.fill();
+
+            // 隐藏提示文字
+            document.getElementById(`hint-${prefix}`).style.display = 'none';
+        }
+
+        /**
+         * 处理签名绘制（鼠标）
+         * @param {MouseEvent} e - 鼠标事件
+         * @param {string} prefix - 签名板标识
+         */
+        function handleSignatureMove(e, prefix) {
+            e.preventDefault();
+            const state = signatureState[prefix];
+            if (!state.isDrawing || !state.ctx) return;
+
+            // 获取画布坐标
+            const { x, y } = getCanvasCoordinates(e, state.canvas);
+
+            // 绘制线条
+            state.ctx.beginPath();
+            state.ctx.moveTo(state.lastX, state.lastY);
+            state.ctx.lineTo(x, y);
+            state.ctx.lineWidth = 2; // 线条宽度
+            state.ctx.lineCap = 'round'; // 线条端点圆润
+            state.ctx.lineJoin = 'round'; // 线条连接处圆润
+            state.ctx.strokeStyle = '#000'; // 线条颜色
+            state.ctx.stroke();
+
+            // 更新坐标
+            state.lastX = x;
+            state.lastY = y;
+
+            // 标记已有签名
+            state.hasSignature = true;
+        }
+
+        /**
+         * 处理签名结束（鼠标）
+         * @param {MouseEvent} e - 鼠标事件
+         * @param {string} prefix - 签名板标识
+         */
+        function handleSignatureEnd(e, prefix) {
+            e.preventDefault();
+            const state = signatureState[prefix];
+            state.isDrawing = false;
+        }
+
+        /**
+         * 处理触摸开始（移动端）
+         * @param {TouchEvent} e - 触摸事件
+         * @param {string} prefix - 签名板标识
+         */
+        function handleTouchStart(e, prefix) {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                // 模拟鼠标事件
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    bubbles: true,
+                    cancelable: true
+                });
+                signatureState[prefix].canvas.dispatchEvent(mouseEvent);
+            }
+        }
+
+        /**
+         * 处理触摸移动（移动端）
+         * @param {TouchEvent} e - 触摸事件
+         * @param {string} prefix - 签名板标识
+         */
+        function handleTouchMove(e, prefix) {
+            e.preventDefault();
+            if (e.touches.length > 0 && signatureState[prefix].isDrawing) {
+                const touch = e.touches[0];
+                // 模拟鼠标事件
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    bubbles: true,
+                    cancelable: true
+                });
+                signatureState[prefix].canvas.dispatchEvent(mouseEvent);
+            }
+        }
+
+        /**
+         * 处理触摸结束（移动端）
+         * @param {TouchEvent} e - 触摸事件
+         * @param {string} prefix - 签名板标识
+         */
+        function handleTouchEnd(e, prefix) {
+            e.preventDefault();
+            // 模拟鼠标事件
+            const mouseEvent = new MouseEvent('mouseup', {
+                bubbles: true,
+                cancelable: true
+            });
+            signatureState[prefix].canvas.dispatchEvent(mouseEvent);
+        }
+
+        /**
+         * 获取画布坐标（修复坐标偏移）
+         * @param {Event} e - 事件对象
+         * @param {HTMLCanvasElement} canvas - 画布元素
+         * @returns {Object} 相对画布的坐标 {x, y}
+         */
+        function getCanvasCoordinates(e, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            
+            // 计算相对坐标（适配缩放和偏移）
+            return {
+                x: (e.clientX - rect.left) / (rect.width / canvas.width) * (1 / dpr),
+                y: (e.clientY - rect.top) / (rect.height / canvas.height) * (1 / dpr)
+            };
+        }
+
+        /**
+         * 重置签名画布
+         * @param {string} prefix - 签名板标识
+         */
+        function resetSignatureCanvas(prefix) {
+            const state = signatureState[prefix];
+            if (!state.ctx || !state.canvas) return;
+
+            const dpr = window.devicePixelRatio || 1;
+            // 清除画布
+            state.ctx.clearRect(
+                0, 
+                0, 
+                state.canvas.width / dpr, 
+                state.canvas.height / dpr
+            );
+            
+            // 重置状态
+            state.isDrawing = false;
+            state.lastX = 0;
+            state.lastY = 0;
+            state.hasSignature = false;
+
+            // 显示提示文字
+            document.getElementById(`hint-${prefix}`).style.display = 'block';
+        }
+
+        /**
+         * 清除签名（修复按钮事件问题）
+         * @param {string} prefix - 签名板标识
+         * @param {Event} event - 事件对象
+         */
+        function clearSignature(prefix, event) {
+            // 阻止事件冒泡和默认行为（核心修复）
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            console.log(`清除签名${prefix}`);
+            resetSignatureCanvas(prefix);
+        }
+
+        /**
+         * 绑定功能按钮事件
+         */
+        function bindButtonEvents() {
+            // 保存为图片
             document.getElementById('save-image-btn').addEventListener('click', function() {
                 if (validateForm() && !isImageSaving) {
                     saveAsImage();
                 }
             });
 
+            // 保存为PDF
             document.getElementById('save-pdf-btn').addEventListener('click', function() {
                 if (validateForm()) {
                     saveAsPDF();
                 }
             });
 
+            // 打印合同
             document.getElementById('print-btn').addEventListener('click', function() {
                 if (validateForm()) {
                     window.print();
                 }
             });
 
-            // 初始化必填字段数组
-            window.requiredFields = [
-                'partyA-name', 'partyA-tel', 'partyB-name', 'partyB-id', 
-                'partyB-tel', 'apartment-name', 'room-number', 'monthly-rent',
-                'deposit', 'lease-start', 'lease-end'
-            ];
-        });
-
-        /**
-         * 初始化签名板（修复甲方签名失效问题）
-         * @param {string} prefix - 签名板前缀（a:甲方，b:乙方）
-         */
-        function initSignaturePad(prefix) {
-            const canvas = document.getElementById(`signature-pad-${prefix}`);
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            let isDrawing = false;
-            let lastX = 0;
-            let lastY = 0;
-
-            // 设置画布分辨率（修复高清屏模糊问题）
-            const setCanvasDimensions = () => {
-                const rect = canvas.getBoundingClientRect();
-                // 保存当前绘制内容
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCanvas.width = canvas.width;
-                tempCanvas.height = canvas.height;
-                tempCtx.drawImage(canvas, 0, 0);
-
-                // 重新设置画布尺寸
-                canvas.width = rect.width * window.devicePixelRatio;
-                canvas.height = rect.height * window.devicePixelRatio;
-                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-                // 恢复绘制内容
-                ctx.drawImage(tempCanvas, 0, 0);
-            };
-
-            // 初始化尺寸
-            setCanvasDimensions();
-            window.addEventListener('resize', setCanvasDimensions);
-
-            // 开始绘制
-            const startDrawing = (e) => {
-                isDrawing = true;
-                const { x, y } = getCanvasCoordinates(e, canvas);
-                lastX = x;
-                lastY = y;
-                // 绘制起始点（修复点按无反应问题）
-                ctx.beginPath();
-                ctx.arc(x, y, 1, 0, 2 * Math.PI);
-                ctx.fillStyle = '#000';
-                ctx.fill();
-            };
-
-            // 绘制过程
-            const draw = (e) => {
-                if (!isDrawing) return;
-                const { x, y } = getCanvasCoordinates(e, canvas);
-                
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(x, y);
-                ctx.lineWidth = 2;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = '#000';
-                ctx.stroke();
-                
-                lastX = x;
-                lastY = y;
-            };
-
-            // 结束绘制
-            const stopDrawing = () => {
-                isDrawing = false;
-            };
-
-            // 解绑原有事件（防止重复绑定）
-            canvas.removeEventListener('mousedown', startDrawing);
-            canvas.removeEventListener('mousemove', draw);
-            canvas.removeEventListener('mouseup', stopDrawing);
-            canvas.removeEventListener('mouseout', stopDrawing);
-            canvas.removeEventListener('touchstart', handleTouchStart);
-            canvas.removeEventListener('touchmove', handleTouchMove);
-            canvas.removeEventListener('touchend', stopDrawing);
-            canvas.removeEventListener('touchcancel', stopDrawing);
-
-            // 绑定鼠标事件
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
-
-            // 绑定触摸事件（修复移动端签名）
-            canvas.addEventListener('touchstart', handleTouchStart);
-            canvas.addEventListener('touchmove', handleTouchMove);
-            canvas.addEventListener('touchend', stopDrawing);
-            canvas.addEventListener('touchcancel', stopDrawing);
-
-            // 存储签名实例
-            signatureInstances[prefix] = { canvas, ctx, isDrawing, lastX, lastY };
-
-            // 触摸事件处理函数
-            function handleTouchStart(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousedown', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
-            }
-
-            function handleTouchMove(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
-            }
+            // 窗口大小变化时重新调整签名板
+            window.addEventListener('resize', function() {
+                setTimeout(() => {
+                    fixCanvasResolution('a');
+                    fixCanvasResolution('b');
+                }, 300);
+            });
         }
 
         /**
-         * 获取画布坐标（修复签名位置偏移）
-         * @param {Event} e - 事件对象
-         * @param {HTMLCanvasElement} canvas - 画布元素
-         * @returns {Object} 坐标对象
-         */
-        function getCanvasCoordinates(e, canvas) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: (e.clientX - rect.left) / (rect.width / canvas.width) * (canvas.width / window.devicePixelRatio),
-                y: (e.clientY - rect.top) / (rect.height / canvas.height) * (canvas.height / window.devicePixelRatio)
-            };
-        }
-
-        /**
-         * 清除签名（修复清除按钮跳转问题）
-         * @param {string} prefix - 签名板前缀（a:甲方，b:乙方）
-         */
-        function clearSignature(prefix) {
-            // 阻止事件冒泡和默认行为
-            event.stopPropagation();
-            event.preventDefault();
-
-            const instance = signatureInstances[prefix];
-            if (instance && instance.ctx) {
-                const { ctx, canvas } = instance;
-                // 清除整个画布
-                ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
-                // 重置绘制状态
-                instance.isDrawing = false;
-                instance.lastX = 0;
-                instance.lastY = 0;
-            }
-        }
-
-        /**
-         * 保存为图片（修复重复保存问题）
+         * 保存为图片
          */
         function saveAsImage() {
-            if (isImageSaving) return; // 防止重复触发
+            if (isImageSaving) return;
 
             try {
                 isImageSaving = true;
@@ -798,54 +1017,61 @@
                 saveBtn.innerText = '保存中...';
                 saveBtn.disabled = true;
 
-                // 获取文件名信息
+                // 获取文件名
                 const apartmentName = document.getElementById('apartment-name').value || '未知公寓';
                 const roomNumber = document.getElementById('room-number').value || '未知房号';
                 const startDate = document.getElementById('lease-start').value || '未知日期';
                 const fileName = `${apartmentName}${roomNumber}_租赁合同_${startDate}`;
 
-                // 配置html2canvas（修复输入框遮挡）
+                // 配置html2canvas（确保签名正常渲染）
                 html2canvas(document.getElementById('contract-content'), {
-                    scale: 2, // 高清截图
+                    scale: 2,
                     useCORS: true,
                     logging: false,
                     allowTaint: false,
                     backgroundColor: '#fff',
-                    // 确保所有元素都被渲染
                     windowWidth: document.getElementById('contract-content').offsetWidth,
                     windowHeight: document.getElementById('contract-content').offsetHeight,
-                    // 修复输入框内容渲染
+                    // 修复输入框和签名板渲染
                     onclone: (clonedDoc) => {
+                        // 处理输入框
                         const clonedInputs = clonedDoc.querySelectorAll('input, textarea');
                         clonedInputs.forEach(input => {
-                            // 复制输入框值到value属性
                             if (input.type === 'text' || input.type === 'tel' || input.type === 'number' || input.type === 'date' || input.tagName === 'TEXTAREA') {
                                 input.setAttribute('value', input.value);
                             }
-                            // 修复复选框状态
                             if (input.type === 'checkbox') {
                                 input.checked = input.checked;
                             }
-                            // 确保输入框可见
                             input.style.opacity = '1';
                             input.style.visibility = 'visible';
-                            input.style.position = 'relative';
-                            input.style.zIndex = '9999';
+                        });
+
+                        // 处理签名板（复制签名内容）
+                        ['a', 'b'].forEach(prefix => {
+                            const sourceCanvas = document.getElementById(`signature-pad-${prefix}`);
+                            const targetCanvas = clonedDoc.getElementById(`signature-pad-${prefix}`);
+                            if (sourceCanvas && targetCanvas) {
+                                const targetCtx = targetCanvas.getContext('2d');
+                                targetCtx.drawImage(sourceCanvas, 0, 0);
+                                // 隐藏提示文字
+                                const hint = clonedDoc.getElementById(`hint-${prefix}`);
+                                if (hint) hint.style.display = 'none';
+                            }
                         });
                     }
                 }).then(canvas => {
                     // 创建下载链接
                     const link = document.createElement('a');
                     link.download = `${fileName}.png`;
-                    link.href = canvas.toDataURL('image/png', 1.0); // 1.0表示最高质量
+                    link.href = canvas.toDataURL('image/png', 1.0);
 
                     // 触发下载
-                    const event = new MouseEvent('click');
-                    link.dispatchEvent(event);
+                    link.click();
 
-                    // 延迟清理，确保下载完成
+                    // 清理资源
                     setTimeout(() => {
-                        URL.revokeObjectURL(link.href); // 释放内存
+                        URL.revokeObjectURL(link.href);
                         isImageSaving = false;
                         saveBtn.innerText = originalText;
                         saveBtn.disabled = false;
@@ -868,14 +1094,14 @@
         }
 
         /**
-         * 保存为PDF（修复输入框遮挡）
+         * 保存为PDF
          */
         function saveAsPDF() {
             try {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4'); // 纵向A4纸
+                const doc = new jsPDF('p', 'mm', 'a4');
 
-                // 获取文件名信息
+                // 获取文件名
                 const apartmentName = document.getElementById('apartment-name').value || '未知公寓';
                 const roomNumber = document.getElementById('room-number').value || '未知房号';
                 const startDate = document.getElementById('lease-start').value || '未知日期';
@@ -896,7 +1122,7 @@
                     windowWidth: document.getElementById('contract-content').offsetWidth,
                     windowHeight: document.getElementById('contract-content').offsetHeight,
                     onclone: (clonedDoc) => {
-                        // 修复输入框内容渲染
+                        // 处理输入框
                         const clonedInputs = clonedDoc.querySelectorAll('input, textarea');
                         clonedInputs.forEach(input => {
                             if (input.type === 'text' || input.type === 'tel' || input.type === 'number' || input.type === 'date' || input.tagName === 'TEXTAREA') {
@@ -908,15 +1134,26 @@
                             input.style.opacity = '1';
                             input.style.visibility = 'visible';
                         });
+
+                        // 处理签名板
+                        ['a', 'b'].forEach(prefix => {
+                            const sourceCanvas = document.getElementById(`signature-pad-${prefix}`);
+                            const targetCanvas = clonedDoc.getElementById(`signature-pad-${prefix}`);
+                            if (sourceCanvas && targetCanvas) {
+                                const targetCtx = targetCanvas.getContext('2d');
+                                targetCtx.drawImage(sourceCanvas, 0, 0);
+                                const hint = clonedDoc.getElementById(`hint-${prefix}`);
+                                if (hint) hint.style.display = 'none';
+                            }
+                        });
                     }
                 }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/jpeg', 0.95); // 0.95平衡质量和大小
-                    const imgWidth = 210; // A4宽度（mm）
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    const imgWidth = 210;
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
                     // 添加图片到PDF
                     doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-                    // 保存PDF
                     doc.save(`${fileName}.pdf`);
 
                     // 恢复按钮状态
@@ -953,18 +1190,38 @@
 
                 const value = input.value.trim();
                 if (!value) {
-                    // 标记错误
                     input.style.borderColor = 'red';
                     input.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.2)';
                     isValid = false;
                 } else {
-                    // 恢复正常样式
                     input.style.borderColor = '#ddd';
                     input.style.boxShadow = 'none';
                 }
             });
 
-            if (!isValid) {
+            // 验证签名（可选）
+            if (isValid) {
+                const hasASign = signatureState.a.hasSignature;
+                const hasBSign = signatureState.b.hasSignature;
+                if (!hasASign || !hasBSign) {
+                    const missing = [];
+                    if (!hasASign) missing.push('甲方');
+                    if (!hasBSign) missing.push('乙方');
+                    alert(`${missing.join('和')}签名尚未完成，请完成签名后再操作！`);
+                    isValid = false;
+
+                    // 滚动到未完成的签名板
+                    if (!hasASign) {
+                        document.getElementById('signature-pad-a').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (!hasBSign) {
+                        document.getElementById('signature-pad-b').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+
+            if (!isValid && !requiredFields.some(id => !document.getElementById(id).value.trim())) {
+                // 仅签名未完成的情况已处理，此处无需额外提示
+            } else if (!isValid) {
                 alert('请填写所有必填字段（红色边框为未填写项）！');
                 // 滚动到第一个错误字段
                 const firstError = document.querySelector('input[style*="border-color: red"], textarea[style*="border-color: red"]');
@@ -977,8 +1234,10 @@
             return isValid;
         }
 
-        // 输入框焦点/失焦事件（优化用户体验）
-        document.addEventListener('DOMContentLoaded', function() {
+        /**
+         * 初始化输入框事件
+         */
+        function initInputEvents() {
             const inputFields = document.querySelectorAll('input, textarea');
             inputFields.forEach(input => {
                 input.addEventListener('focus', function() {
@@ -1000,16 +1259,11 @@
                     }
                 });
             });
-        });
+        }
 
-        // 计算日租金（辅助功能）
-        document.getElementById('monthly-rent').addEventListener('input', function() {
-            const monthlyRent = parseInt(this.value) || 0;
-            const dailyRent = (monthlyRent / 30).toFixed(2);
-            console.log(`日租金：${dailyRent}元`);
-        });
-
-        // 自动填充示例数据（测试用）
+        /**
+         * 自动填充示例数据（测试用）
+         */
         function fillSampleData() {
             document.getElementById('partyA-name').value = '张三';
             document.getElementById('partyA-tel').value = '13800138000';
@@ -1028,23 +1282,49 @@
             document.getElementById('electric-base').value = '1200';
             document.getElementById('water-base').value = '350';
             document.getElementById('other-items').value = '燃气灶、微波炉';
+
+            // 自动填充示例签名
+            setTimeout(() => {
+                drawSampleSignature('a');
+                drawSampleSignature('b');
+            }, 500);
         }
 
-        // 快捷键支持（F5填充示例数据）
+        /**
+         * 绘制示例签名（测试用）
+         * @param {string} prefix - 签名板标识
+         */
+        function drawSampleSignature(prefix) {
+            const state = signatureState[prefix];
+            if (!state.ctx || !state.canvas) return;
+
+            // 隐藏提示文字
+            document.getElementById(`hint-${prefix}`).style.display = 'none';
+
+            // 绘制示例签名
+            state.ctx.beginPath();
+            state.ctx.moveTo(50, 80);
+            state.ctx.bezierCurveTo(80, 40, 120, 120, 150, 80);
+            state.ctx.bezierCurveTo(180, 40, 220, 120, 250, 80);
+            state.ctx.lineWidth = 2;
+            state.ctx.lineCap = 'round';
+            state.ctx.lineJoin = 'round';
+            state.ctx.strokeStyle = '#000';
+            state.ctx.stroke();
+
+            // 标记已有签名
+            state.hasSignature = true;
+        }
+
+        /**
+         * 快捷键支持（F5填充示例数据）
+         */
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F5' && !e.ctrlKey && !e.shiftKey) {
                 e.preventDefault();
                 fillSampleData();
-                alert('已填充示例数据！');
+                alert('已填充示例数据和签名！');
             }
-        });
-
-        // 窗口大小变化时重新初始化签名板
-        window.addEventListener('resize', function() {
-            setTimeout(() => {
-                initSignaturePad('a');
-                initSignaturePad('b');
-            }, 300);
         });
     </script>
 </body>
