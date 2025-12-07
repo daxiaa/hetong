@@ -2,816 +2,1050 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>房屋租赁合同（完整修复版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>租赁合同</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        @media print {
-            .no-print { display: none !important; }
-            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 14px;
-            color: #333;
-            padding: 10px;
-            margin: 0;
+            font-family: 'Noto Sans SC', sans-serif;
             line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin: 0;
         }
-        #contract-container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            max-width: 700px;
+        .container {
+            max-width: 800px;
             margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
         }
         h1 {
-            font-size: 20px;
-            font-weight: bold;
             text-align: center;
-            margin: 0 0 25px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #eee;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #2c3e50;
         }
-        .section-title {
+        h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 25px 0 15px;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        h3 {
             font-size: 16px;
-            font-weight: bold;
-            margin: 20px 0 12px;
-            color: #222;
-            padding-left: 6px;
-            border-left: 3px solid #2563eb;
+            font-weight: 700;
+            margin: 20px 0 10px;
+            color: #34495e;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 12px 0;
+            margin: 15px 0;
+            table-layout: fixed;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 10px;
-            text-align: left;
-            vertical-align: middle;
+            vertical-align: top;
+            word-wrap: break-word;
         }
         th {
-            background: #f8f8f8;
-            font-weight: bold;
-            color: #444;
+            background-color: #f5f5f5;
+            font-weight: 500;
         }
-        .form-input {
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            padding: 8px;
-            width: 100%;
             font-size: 14px;
             box-sizing: border-box;
-            margin: 2px 0;
+            position: relative;
+            z-index: 2;
+            background: #fff;
+            /* 修复输入框内容被遮挡 */
+            overflow: visible;
+            height: auto;
+            min-height: 40px;
         }
-        .form-input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
         }
-        .form-text {
-            border-bottom: 1px solid #000;
-            padding: 8px 0;
-            width: 100%;
-            font-size: 14px;
-            margin: 2px 0;
-            min-height: 36px;
-            display: inline-block;
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
         }
         .signature-pad {
             width: 100%;
-            height: 120px;
-            border: 1px solid #000;
+            height: 150px;
+            border: 1px solid #ddd;
             border-radius: 4px;
+            margin: 10px 0;
             background: #fff;
-            margin: 8px 0;
-            touch-action: none;
+            cursor: crosshair;
+            position: relative;
+            z-index: 2;
+            /* 修复签名板层级问题 */
+            overflow: hidden;
         }
         .btn-group {
             display: flex;
             gap: 10px;
-            margin: 25px 0;
+            margin: 30px 0;
             flex-wrap: wrap;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
+            position: relative;
+            z-index: 2;
         }
         .btn {
-            padding: 10px 16px;
+            padding: 12px 20px;
             border: none;
             border-radius: 4px;
-            cursor: pointer;
-            flex: 1;
-            min-width: 100px;
-            text-align: center;
             font-size: 14px;
             font-weight: 500;
-            transition: opacity 0.2s;
-        }
-        .btn:hover {
-            opacity: 0.9;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
         }
         .btn-primary {
-            background: #2563eb;
+            background-color: #3498db;
+            color: #fff;
+        }
+        .btn-success {
+            background-color: #2ecc71;
             color: #fff;
         }
         .btn-warning {
-            background: #f59e0b;
+            background-color: #f39c12;
             color: #fff;
         }
-        .btn-secondary {
-            background: #64748b;
-            color: #fff;
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            transition: all 0.3s;
         }
-        .alert {
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-            font-size: 14px;
-            display: none;
+        .date-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-            display: block;
+        .date-group > div {
+            flex: 1;
+            min-width: 150px;
         }
-        .alert-error {
-            background: #fee2e2;
-            color: #b91c1c;
-            display: block;
+        .note {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-top: 5px;
         }
-        ol, ul {
-            padding-left: 22px;
-            margin: 10px 0;
+        .section {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
-        li {
-            margin: 8px 0;
+        .signature-container {
+            margin: 30px 0;
+            position: relative;
+            z-index: 2;
         }
-        .inline-group {
+        .signature-row {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .signature-col {
+            flex: 1;
+        }
+        /* 修复打印样式 */
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+                margin: 0;
+                width: 100%;
+            }
+            .btn-group {
+                display: none;
+            }
+            .signature-pad {
+                border: 1px solid #333;
+            }
+            input[type="text"],
+            input[type="tel"],
+            input[type="number"],
+            input[type="date"],
+            textarea {
+                border: none;
+                padding: 5px;
+                font-size: 13px;
+                color: #000;
+            }
+            @page {
+                margin: 1.5cm;
+                size: A4;
+            }
+        }
+        /* 适配移动端 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            h2 {
+                font-size: 16px;
+            }
+            h3 {
+                font-size: 15px;
+            }
+            th, td {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .date-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .signature-pad {
+                height: 120px;
+            }
+            input[type="text"],
+            input[type="tel"],
+            input[type="number"],
+            input[type="date"],
+            textarea {
+                padding: 8px;
+                font-size: 13px;
+            }
+        }
+        /* 修复行内输入框布局 */
+        .inline-input-group {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
         }
         .inline-input {
-            flex: 1;
-            min-width: 80px;
-        }
-        /* 设施清单勾选框样式（无保存标记） */
-        .facility-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .facility-checkbox input {
-            width: 16px;
-            height: 16px;
-            accent-color: #2563eb;
-        }
-        /* 保存时显示的√×标记（隐藏原始勾选框） */
-        .facility-display-mark {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2563eb;
-            display: none; /* 默认隐藏，保存时显示 */
+            width: auto !important;
+            min-width: 80px !important;
+            display: inline-block !important;
         }
     </style>
 </head>
 <body>
-    <div id="alert" class="alert max-w-700px mx-auto"></div>
+    <div class="container" id="contract-content">
+        <h1>租赁合同</h1>
 
-    <div id="contract-container">
-        <h1>房屋租赁合同</h1>
-
-        <!-- 甲乙双方信息（完整保留） -->
+        <!-- 甲乙双方信息表 -->
         <table>
             <tr>
-                <th width="50%">甲方（出租方 / 房东）</th>
-                <th width="50%">乙方（承租方 / 租客）</th>
+                <th>甲方（出租方 / 房东）</th>
+                <th>乙方（承租方 / 租客）</th>
             </tr>
             <tr>
-                <td><input type="text" class="form-input" placeholder="姓名/名称" id="partyA-name" required></td>
-                <td><input type="text" class="form-input" placeholder="姓名/名称" id="partyB-name" required></td>
-            </tr>
-            <tr>
-                <td><input type="tel" class="form-input" placeholder="联系电话" id="partyA-phone" pattern="1[3-9]\d{9}" required></td>
-                <td><input type="text" class="form-input" placeholder="身份证号/统一社会信用代码" id="partyB-id" required></td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-                <td><input type="tel" class="form-input" placeholder="联系电话" id="partyB-phone" pattern="1[3-9]\d{9}" required></td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-                <td><input type="text" class="form-input" placeholder="紧急联系人及电话（例：张三 13800138000）" id="partyB-emergency" required></td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-                <td><input type="text" class="form-input" placeholder="实际居住人信息（含共同居住人）" id="partyB-residents" required></td>
+                <td>
+                    <div class="form-group">
+                        <label>姓名 / 名称：</label>
+                        <input type="text" id="partyA-name" placeholder="请输入甲方姓名/名称">
+                    </div>
+                    <div class="form-group">
+                        <label>联系电话：</label>
+                        <input type="tel" id="partyA-tel" placeholder="请输入甲方联系电话">
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <label>姓名 / 名称：</label>
+                        <input type="text" id="partyB-name" placeholder="请输入乙方姓名/名称">
+                    </div>
+                    <div class="form-group">
+                        <label>身份证号 / 统一社会信用代码：</label>
+                        <input type="text" id="partyB-id" placeholder="请输入身份证号/统一社会信用代码">
+                    </div>
+                    <div class="form-group">
+                        <label>联系电话：</label>
+                        <input type="tel" id="partyB-tel" placeholder="请输入乙方联系电话">
+                    </div>
+                    <div class="form-group">
+                        <label>紧急联系人及电话：</label>
+                        <input type="text" id="partyB-emergency" placeholder="请输入紧急联系人及电话">
+                    </div>
+                    <div class="form-group">
+                        <label>实际居住人信息（含共同居住人）：</label>
+                        <textarea id="partyB-residents" rows="2" placeholder="请输入实际居住人信息（附身份证复印件）"></textarea>
+                    </div>
+                </td>
             </tr>
         </table>
 
-        <!-- 引言（完整保留） -->
-        <div class="section-title">引言</div>
+        <h3>引言</h3>
         <p>本条款依据《中华人民共和国民法典》第七百零三条至七百三十四条等相关法律法规拟定，明确房屋租赁双方权利义务，确保本合同合法有效，对双方具有法律约束力。</p>
 
-        <!-- 第一条 租赁标的（完整保留） -->
-        <div class="section-title">第一条 租赁标的</div>
-        <ol>
-            <li>
-                甲方将
-                <div class="inline-group">
-                    <input type="text" class="form-input inline-input" placeholder="例如：XX小区" id="house-address" required>
-                    公寓
-                    <input type="text" class="form-input inline-input" placeholder="室号（例：101）" id="house-room" required>
-                    出租给乙方。
+        <!-- 第一条 租赁标的 -->
+        <div class="section">
+            <h2>第一条 租赁标的</h2>
+            <div class="form-group">
+                <div class="inline-input-group">
+                    <label>1. 甲方将</label>
+                    <input type="text" id="apartment-name" placeholder="请输入公寓名称" class="inline-input">
+                    <label>公寓</label>
+                    <input type="text" id="room-number" placeholder="请输入房号" class="inline-input" style="min-width: 60px !important;">
+                    <label>室出租给乙方。</label>
                 </div>
-            </li>
-            <li>
-                该房屋用途：
-                <ul>
-                    <li>仅限乙方本人（及共同居住人）居住使用；</li>
-                    <li>乙方不得擅自改变用途，不得转租、转借、分租给第三方；</li>
-                    <li>不得作为办公、经营、仓储等非居住用途。</li>
-                </ul>
-            </li>
-        </ol>
+            </div>
+            <div class="form-group">
+                <label>2. 该房屋用途：</label>
+                <p>1. 仅限乙方本人（及共同居住人）居住使用。</p>
+                <p>2. 乙方不得擅自改变用途，不得转租、转借、分租给第三方。</p>
+                <p>3. 不得作为办公、经营、仓储等非居住用途。</p>
+            </div>
+        </div>
 
-        <!-- 第二条 租赁期限（完整保留） -->
-        <div class="section-title">第二条 租赁期限</div>
-        <ol>
-            <li>
-                <div class="inline-group">
-                    租赁期限自
-                    <input type="date" class="form-input inline-input" id="lease-start" required>
-                    起至
-                    <input type="date" class="form-input inline-input" id="lease-end" required>
-                    止，共计
-                    <input type="number" class="form-input inline-input" id="lease-months" value="6" min="1" required>
-                    个月。
+        <!-- 第二条 租赁期限 -->
+        <div class="section">
+            <h2>第二条 租赁期限</h2>
+            <div class="date-group">
+                <div>
+                    <label>1. 租赁期限自：</label>
+                    <input type="date" id="lease-start" class="lease-date">
                 </div>
-            </li>
-            <li>租赁期满，乙方若需续租，应提前 30 日通知甲方，否则视为续租按上一期合同继续生效。若甲方不同意续租，乙方应于租赁期满当日腾空房屋并办理交接；若乙方逾期未搬离，视为违约，每逾期一日按日租金的 3 倍向甲方支付占用费，同时甲方有权强制清退，产生的费用（含开锁费、搬运费、仓储费等）由乙方承担。</li>
-        </ol>
-
-        <!-- 第三条 租金、押金及支付方式（完整保留） -->
-        <div class="section-title">第三条 租金、押金及支付方式</div>
-        <ol>
-            <li>
-                <div class="inline-group">
-                    租金标准：每月人民币
-                    <input type="number" class="form-input inline-input" placeholder="金额" id="rent-monthly" required>
-                    元，管理费
-                    <input type="number" class="form-input inline-input" placeholder="金额" id="management-fee" required>
-                    元，租金不含水、电、燃气、物业、宽带、有线电视等其他费用。
+                <div>
+                    <label>起至：</label>
+                    <input type="date" id="lease-end" class="lease-date">
                 </div>
-            </li>
-            <li>支付方式：乙方应在每月1日支付至甲方指定账户，首期租金于本合同签订当日支付。</li>
-            <li>
-                <div class="inline-group">
-                    押金：乙方应于签订本合同当日支付人民币
-                    <input type="number" class="form-input inline-input" placeholder="金额" id="deposit" required>
-                    元作为押金，租赁期满后，经甲方验收房屋及附属设施无损坏、乙方结清所有应缴费用（含租金、水电费、违约金等）后，甲方于 10 日内无息退还押金。若房屋或设施有损坏，甲方有权从押金中扣除维修费用，不足部分有权向乙方追偿。
+            </div>
+            <div class="form-group">
+                <div class="inline-input-group">
+                    <label>共计：</label>
+                    <input type="number" id="lease-months" placeholder="请输入租赁月数" class="inline-input" style="min-width: 60px !important;">
+                    <label>个月。</label>
                 </div>
-            </li>
-        </ol>
+            </div>
+            <p>2. 租赁期满，乙方若需续租，应提前 30 日通知甲方，否则视为续租按上一期合同继续生效。若甲方不同意续租，乙方应于租赁期满当日腾空房屋并办理交接；若乙方逾期未搬离，视为违约，每逾期一日按日租金的 3 倍向甲方支付占用费，同时甲方有权强制清退，产生的费用（含开锁费、搬运费、仓储费等）由乙方承担。</p>
+        </div>
 
-        <!-- 第四条 相关费用承担（完整保留） -->
-        <div class="section-title">第四条 相关费用承担</div>
-        <ol>
-            <li>
-                <div class="inline-group">
-                    租赁期间，乙方承担该房屋的水费、电费、燃气费、物业管理费、宽带费、有线电视费、垃圾清运费等所有因使用房屋产生的费用，乙方应按时足额缴纳，不得拖欠。电每度0.7元，底数
-                    <input type="number" class="form-input inline-input" id="electric-base" value="0" min="0" required>
-                    度，公区电耗分摊0.5元/度，水每方5元，底数
-                    <input type="number" class="form-input inline-input" id="water-base" value="0" min="0" required>
-                    方（不足1方按1方算）
+        <!-- 第三条 租金、押金及支付方式 -->
+        <div class="section">
+            <h2>第三条 租金、押金及支付方式</h2>
+            <div class="form-group">
+                <div class="inline-input-group">
+                    <label>1. 租金标准：每月人民币</label>
+                    <input type="number" id="monthly-rent" placeholder="0" class="inline-input" style="min-width: 80px !important;">
+                    <label>元，管理费</label>
+                    <input type="number" id="management-fee" placeholder="0" class="inline-input" style="min-width: 80px !important;">
+                    <label>元，租金不含水、电、燃气、物业、宽带、有线电视等其他费用。</label>
                 </div>
-            </li>
-            <li>乙方应合理使用房屋设施，不得向下水道丢弃易堵塞物品，因乙方使用不当造成下水道堵塞或其他设施损坏的，乙方需承担疏通、维修费用及因此给甲方造成的全部损失。</li>
-        </ol>
+            </div>
+            <p>2. 支付方式：乙方应在每月1日支付至甲方指定账户，首期租金于本合同签订当日支付。</p>
+            <div class="form-group">
+                <div class="inline-input-group">
+                    <label>3. 押金：乙方应于签订本合同当日支付人民币</label>
+                    <input type="number" id="deposit" placeholder="0" class="inline-input" style="min-width: 80px !important;">
+                    <label>元作为押金，门卡押金</label>
+                    <input type="number" id="card-deposit" placeholder="0" class="inline-input" style="min-width: 60px !important;">
+                    <label>元，空调遥控器押金</label>
+                    <input type="number" id="remote-deposit" placeholder="0" class="inline-input" style="min-width: 60px !important;">
+                    <label>元，租赁期满后，经甲方验收房屋及附属设施无损坏、乙方结清所有应缴费用（含租金、水电费、违约金等）后，甲方于 10 日内无息退还押金。若房屋或设施有损坏，甲方有权从押金中扣除维修费用，不足部分有权向乙方追偿。</label>
+                </div>
+            </div>
+        </div>
 
-        <!-- 第五条 房屋使用及维护（完整保留） -->
-        <div class="section-title">第五条 房屋使用及维护</div>
-        <ol>
-            <li>乙方应爱护房屋及附属设施，不得擅自拆改、变动房屋结构，不得损坏门窗、墙面、地面、家电、家具等设施。若因乙方使用不当或故意造成损坏，乙方应在甲方通知后 3 日内修复或承担维修费用，逾期未修复的，甲方有权自行维修，费用由乙方承担，同时乙方应支付维修费用 20% 的违约金。</li>
-            <li>乙方不得擅自增设、改装电器设备，若确需增设，应事先征得甲方书面同意，且不得改变房屋原有电路、水路布局，否则造成的安全事故及财产损失由乙方承担全部责任。</li>
-            <li>租赁期间，甲方有权定期（每月不超过 1 次）对房屋进行安全检查及设施维护，乙方应予以配合，不得无故拒绝。甲方检查时若发现乙方存在违规使用房屋或损坏设施的情况，有权要求乙方立即整改。</li>
-            <li>租赁期间，严禁在室内为电动车及电池充电，违规导致的一切后果由承租方自行承担。若承租方利用该房屋从事非法经营或其他违法活动，出租方有权立即无条件收回房屋，已收取的租金及押金不予退还；造成出租方损失的，承租方需按实际损失金额予以赔偿。</li>
-            <li>乙方须严格遵守居住所在地的居规民约，并按照当地街道办事处、公安机关等相关部门要求，及时办理各项法定手续及证件（包括但不限于莞 e 申报）。因未履行相关义务导致的法律责任及后果，均由乙方自行承担。</li>
-        </ol>
+        <!-- 第四条 相关费用承担 -->
+        <div class="section">
+            <h2>第四条 相关费用承担</h2>
+            <div class="form-group">
+                <div class="inline-input-group">
+                    <p>1. 租赁期间，乙方承担该房屋的水费、电费、燃气费、物业管理费、宽带费、有线电视费、垃圾清运费等所有因使用房屋产生的费用，乙方应按时足额缴纳，不得拖欠。电每度 0.7 元，底数</p>
+                    <input type="number" id="electric-base" placeholder="0" class="inline-input" style="min-width: 60px !important;">
+                    <label>度，公区电耗分摊0.5元/度，水每方 5 元，底数</label>
+                    <input type="number" id="water-base" placeholder="0" class="inline-input" style="min-width: 60px !important;">
+                    <label>方（不足1方按1方算）</label>
+                </div>
+            </div>
+            <p>2. 乙方应合理使用房屋设施，不得向下水道丢弃易堵塞物品，因乙方使用不当造成下水道堵塞或其他设施损坏的，乙方需承担疏通、维修费用及因此给甲方造成的全部损失。</p>
+        </div>
 
-        <!-- 第六条 违约责任（完整保留） -->
-        <div class="section-title">第六条 违约责任</div>
-        <ol>
-            <li>乙方逾期支付租金的，每逾期一日，按应付未付租金的 1% 向甲方支付违约金；逾期超过 7 日的，甲方有权单方面解除合同，收回房屋，押金不予退还，同时乙方应支付相当于 1 个月租金的违约金，若违约金不足以弥补甲方损失（含空置期租金、中介费等），乙方应另行赔偿。</li>
-            <li>乙方违反本合同第一条第 2 款约定，擅自改变房屋用途、转租、转借、分租的，甲方有权立即解除合同，收回房屋，押金不予退还，乙方应支付相当于 2 个月租金的违约金，同时甲方有权要求乙方清退第三方，产生的费用由乙方承担。</li>
-            <li>乙方未按约定时间腾空房屋的，除按本合同第二条第 2 款支付占用费外，还应支付相当于 1 个月租金的违约金，若造成甲方其他损失（如后续租客无法入住的违约金），乙方应一并赔偿。</li>
-            <li>乙方损坏房屋结构或附属设施且拒不承担维修费用的，甲方有权从押金中扣除，不足部分有权追偿，同时乙方应支付维修费用等额的违约金。</li>
-            <li>因乙方原因导致房屋产生安全事故（如火灾、漏水等），造成甲方或第三方财产损失、人身伤害的，由乙方承担全部赔偿责任，甲方有权解除合同，押金不予退还。</li>
-        </ol>
+        <!-- 第五条 房屋使用及维护 -->
+        <div class="section">
+            <h2>第五条 房屋使用及维护</h2>
+            <p>1. 乙方应爱护房屋及附属设施，不得擅自拆改、变动房屋结构，不得损坏门窗、墙面、地面、家电、家具等设施。若因乙方使用不当或故意造成损坏，乙方应在甲方通知后 3 日内修复或承担维修费用，逾期未修复的，甲方有权自行维修，费用由乙方承担，同时乙方应支付维修费用 20% 的违约金。</p>
+            <p>2. 乙方不得擅自增设、改装电器设备，若确需增设，应事先征得甲方书面同意，且不得改变房屋原有电路、水路布局，否则造成的安全事故及财产损失由乙方承担全部责任。</p>
+            <p>3. 租赁期间，甲方有权定期（每月不超过 1 次）对房屋进行安全检查及设施维护，乙方应予以配合，不得无故拒绝。甲方检查时若发现乙方存在违规使用房屋或损坏设施的情况，有权要求乙方立即整改。</p>
+            <p>4. 租赁期间，严禁在室内为电动车及电池充电，违规导致的一切后果由承租方自行承担。若承租方利用该房屋从事非法经营或其他违法活动，出租方有权立即无条件收回房屋，已收取的租金及押金不予退还；造成出租方损失的，承租方需按实际损失金额予以赔偿。</p>
+            <p>5. 乙方须严格遵守居住所在地的居规民约，并按照当地街道办事处、公安机关等相关部门要求，及时办理各项法定手续及证件（包括但不限于莞 e 申报）。因未履行相关义务导致的法律责任及后果，均由乙方自行承担。</p>
+        </div>
 
-        <!-- 第七条 合同解除及终止（完整保留） -->
-        <div class="section-title">第七条 合同解除及终止</div>
-        <ol>
-            <li>经甲方同意，乙方可提前解除合同，但应提前 30 日通知甲方，且押金不予退还，同时乙方应支付相当于 1 个月租金的违约金，甲方有权要求乙方结清所有费用并保持房屋及设施完好。</li>
-            <li>因不可抗力（如地震、拆迁等）导致合同无法履行的，双方互不承担违约责任，租金按实际租赁天数结算，押金无息退还，但乙方应配合甲方办理相关手续。</li>
-            <li>甲方因自身需要（如出售、自住等）需提前解除合同的，应提前 30 日通知乙方，押金无息退还，甲方无需支付违约金，但应退还乙方已支付的未实际租赁期间的租金。</li>
-            <li>合同期满退房时，乙方须结清全部费用，并完成房屋清洁。同时，每间房屋需缴纳 100 元卫生消毒费；若未履行清洁义务，需额外支付 100 元 / 间清洁费用。上述款项未结清或未按要求执行，甲方有权不予退还押金。乙方应于退房当日 12:00 前完成搬离，逾期将按临时住宿标准另行计费。</li>
-        </ol>
+        <!-- 第六条 违约责任 -->
+        <div class="section">
+            <h2>第六条 违约责任</h2>
+            <p>1. 乙方逾期支付租金的，每逾期一日，按应付未付租金的 1% 向甲方支付违约金；逾期超过 7 日的，甲方有权单方面解除合同，收回房屋，押金不予退还，同时乙方应支付相当于 1 个月租金的违约金，若违约金不足以弥补甲方损失（含空置期租金、中介费等），乙方应另行赔偿。</p>
+            <p>2. 乙方违反本合同第一条第 2 款约定，擅自改变房屋用途、转租、转借、分租的，甲方有权立即解除合同，收回房屋，押金不予退还，乙方应支付相当于 2 个月租金的违约金，同时甲方有权要求乙方清退第三方，产生的费用由乙方承担。</p>
+            <p>3. 乙方未按约定时间腾空房屋的，除按本合同第二条第 2 款支付占用费外，还应支付相当于 1 个月租金的违约金，若造成甲方其他损失（如后续租客无法入住的违约金），乙方应一并赔偿。</p>
+            <p>4. 乙方损坏房屋结构或附属设施且拒不承担维修费用的，甲方有权从押金中扣除，不足部分有权追偿，同时乙方应支付维修费用等额的违约金。</p>
+            <p>5. 因乙方原因导致房屋产生安全事故（如火灾、漏水等），造成甲方或第三方财产损失、人身伤害的，由乙方承担全部赔偿责任，甲方有权解除合同，押金不予退还。</p>
+        </div>
 
-        <!-- 第八条 其他约定（完整保留） -->
-        <div class="section-title">第八条 其他约定</div>
-        <ol>
-            <li>乙方入住时应核对《房屋及附属设施交接清单》，签字确认后视为对房屋现状及设施的认可；租赁期满交接时，应按清单恢复原状（自然损耗除外）。</li>
-            <li>乙方不得在房屋内存放易燃易爆、有毒有害等危险物品，不得从事违法犯罪活动，否则甲方有权立即解除合同，押金不予退还，同时追究乙方法律责任。</li>
-            <li>本合同未尽事宜，由双方协商补充，补充协议与本合同具有同等法律效力；协商不成的，提交房屋所在地人民法院诉讼解决。</li>
-            <li>本合同一式两份，甲乙双方各执一份，自签字（或盖章）之日起生效。</li>
-            <li>为了大家共同安全，乙方来客须在当日 23 点前离开公寓，如需留宿须到管理处登记，乙方并承担留宿后果。</li>
-            <li>租赁期内，承租人作为房屋实际管理人，须严格履行安全管理义务，切实做好防火、防盗、防触电等安全防范工作，不得从事任何危及人身安全的活动。租赁房屋内发生的一切安全事故，包括但不限于因高空坠物、水电煤气使用不当、意外摔倒等导致承租人及其同住人员的人身伤害，均由承租人自行承担全部责任，出租人不承担任何法律及经济责任。</li>
-        </ol>
+        <!-- 第七条 合同解除及终止 -->
+        <div class="section">
+            <h2>第七条 合同解除及终止</h2>
+            <p>1. 经甲方同意，乙方可提前解除合同，但应提前 30 日通知甲方，且押金不予退还，同时乙方应支付相当于 1 个月租金的违约金，甲方有权要求乙方结清所有费用并保持房屋及设施完好。</p>
+            <p>2. 因不可抗力（如地震、拆迁等）导致合同无法履行的，双方互不承担违约责任，租金按实际租赁天数结算，押金无息退还，但乙方应配合甲方办理相关手续。</p>
+            <p>3. 甲方因自身需要（如出售、自住等）需提前解除合同的，应提前 30 日通知乙方，押金无息退还，甲方无需支付违约金，但应退还乙方已支付的未实际租赁期间的租金。</p>
+            <p>4. 合同期满退房时，乙方须结清全部费用，并完成房屋清洁。同时，每间房屋需缴纳 100 元卫生消毒费；若未履行清洁义务，需额外支付 100 元 / 间清洁费用。上述款项未结清或未按要求执行，甲方有权不予退还押金。乙方应于退房当日 12:00 前完成搬离，逾期将按临时住宿标准另行计费。</p>
+        </div>
 
-        <!-- 附件一：房屋设施清单（简化为是否配备，无保存标记） -->
-        <div class="section-title">附件一：房屋设施清单（有√ / 无×）</div>
-        <table>
-            <tr>
-                <th>物品名称</th>
-                <th>是否配备（默认有）</th>
-            </tr>
-            <!-- 每个设施仅显示勾选框，保存时自动转换为√×（无单独标记列） -->
-            <tr>
-                <td>空调</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-ac" checked>
-                        <label for="facility-ac">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-ac-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>冰箱</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-fridge" checked>
-                        <label for="facility-fridge">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-fridge-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>油烟机</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-rangehood" checked>
-                        <label for="facility-rangehood">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-rangehood-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>洗衣机</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-washer" checked>
-                        <label for="facility-washer">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-washer-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>热水器</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-waterheater" checked>
-                        <label for="facility-waterheater">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-waterheater-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>路由器</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-router" checked>
-                        <label for="facility-router">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-router-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>床</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-bed" checked>
-                        <label for="facility-bed">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-bed-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>沙发</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-sofa" checked>
-                        <label for="facility-sofa">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-sofa-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>门窗</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-doors" checked>
-                        <label for="facility-doors">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-doors-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>墙面</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-wall" checked>
-                        <label for="facility-wall">完好</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-wall-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>地面</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-floor" checked>
-                        <label for="facility-floor">完好</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-floor-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>茶几</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-coffee-table" checked>
-                        <label for="facility-coffee-table">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-coffee-table-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>衣柜</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-wardrobe" checked>
-                        <label for="facility-wardrobe">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-wardrobe-mark">√</span>
-                </td>
-            </tr>
-            <tr>
-                <td>窗帘</td>
-                <td>
-                    <div class="facility-checkbox">
-                        <input type="checkbox" id="facility-curtain" checked>
-                        <label for="facility-curtain">有</label>
-                    </div>
-                    <span class="facility-display-mark" id="facility-curtain-mark">√</span>
-                </td>
-            </tr>
-        </table>
+        <!-- 第八条 其他约定 -->
+        <div class="section">
+            <h2>第八条 其他约定</h2>
+            <p>1. 乙方入住时应核对《房屋及附属设施交接清单》，签字确认后视为对房屋现状及设施的认可；租赁期满交接时，应按清单恢复原状（自然损耗除外）。</p>
+            <p>2. 乙方不得在房屋内存放易燃易爆、有毒有害等危险物品，不得从事违法犯罪活动，否则甲方有权立即解除合同，押金不予退还，同时追究乙方法律责任。</p>
+            <p>3. 本合同未尽事宜，由双方协商补充，补充协议与本合同具有同等法律效力；协商不成的，提交房屋所在地人民法院诉讼解决。</p>
+            <p>4. 本合同一式两份，甲乙双方各执一份，自签字（或盖章）之日起生效。</p>
+            <p>5. 为了大家共同安全,乙方来客须在当日 23 点前离开公寓,如需留宿须到管理处登记,乙方并承担留宿后果</p>
+            <p>6. 租赁期间，乙方及共同居住人、访客不得在租赁房屋内饲养、寄养任何宠物（包括但不限于犬类、猫类、鸟类等各类动物），也不得携带宠物进入房屋，否则乙方需在 3-7 日内整改并支付月租金 50%-100% 的违约金，造成房屋损坏或第三方损失的由乙方全额赔偿，情节严重的甲方有权解除合同、没收押金并追偿全部损失</p>
+            <p>7. 租赁期内，承租人作为房屋实际管理人，须严格履行安全管理义务，切实做好防火、防盗、防触电等安全防范工作，不得从事任何危及人身安全的活动。租赁房屋内发生的一切安全事故，包括但不限于因高空坠物、水电煤气使用不当、意外摔倒等导致承租人及其同住人员的人身伤害，均由承租人自行承担全部责任，出租人不承担任何法律及经济责任。</p>
+        </div>
 
-        <!-- 签名区域（完整保留） -->
-        <div class="section-title">手写签名确认</div>
-        <table>
-            <tr>
-                <th>甲方（出租方）</th>
-                <th>乙方（承租方）</th>
-            </tr>
-            <tr>
-                <td>
-                    <canvas class="signature-pad" id="signatureA"></canvas>
-                    <button class="btn btn-secondary w-full mt-2" onclick="clearSignature('A')">清除签名</button>
-                    <input type="date" class="form-input mt-4" id="sign-dateA" required>
-                </td>
-                <td>
-                    <canvas class="signature-pad" id="signatureB"></canvas>
-                    <button class="btn btn-secondary w-full mt-2" onclick="clearSignature('B')">清除签名</button>
-                    <input type="date" class="form-input mt-4" id="sign-dateB" required>
-                </td>
-            </tr>
-        </table>
+        <!-- 附件一：房屋及附属设施交接清单 -->
+        <div class="section">
+            <h2>附件一：《房屋及附属设施交接清单》</h2>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item1" checked>
+                <label for="item1">空调</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item2" checked>
+                <label for="item2">冰箱</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item3" checked>
+                <label for="item3">油烟机</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item4" checked>
+                <label for="item4">洗衣机</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item5" checked>
+                <label for="item5">热水器</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item6" checked>
+                <label for="item6">路由器</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item7" checked>
+                <label for="item7">床</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item8" checked>
+                <label for="item8">沙发</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item9" checked>
+                <label for="item9">门窗</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item10" checked>
+                <label for="item10">墙面</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item11" checked>
+                <label for="item11">地面</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item12">
+                <label for="item12">茶几</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item13">
+                <label for="item13">衣柜</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="item14">
+                <label for="item14">窗帘</label>
+            </div>
+            <div class="form-group">
+                <label>其他设施：</label>
+                <input type="text" id="other-items" placeholder="请输入其他设施名称">
+            </div>
+        </div>
+
+        <!-- 签名区域 -->
+        <div class="signature-container">
+            <h2>签字确认</h2>
+            <div class="signature-row">
+                <!-- 甲方签名区域 -->
+                <div class="signature-col">
+                    <label>甲方（签字 / 盖章）：</label>
+                    <canvas id="signature-pad-a" class="signature-pad" data-pad="a"></canvas>
+                    <div style="margin-top: 10px;">
+                        <button type="button" class="btn btn-warning" onclick="clearSignature('a')">清除甲方签名</button>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>日期：</label>
+                        <input type="date" id="sign-date-a">
+                    </div>
+                </div>
+                <!-- 乙方签名区域 -->
+                <div class="signature-col">
+                    <label>乙方（签字 / 盖章）：</label>
+                    <canvas id="signature-pad-b" class="signature-pad" data-pad="b"></canvas>
+                    <div style="margin-top: 10px;">
+                        <button type="button" class="btn btn-warning" onclick="clearSignature('b')">清除乙方签名</button>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>日期：</label>
+                        <input type="date" id="sign-date-b">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- 操作按钮 -->
-    <div class="btn-group no-print">
-        <button class="btn btn-primary" onclick="saveAsImage()">保存为图片</button>
-        <button class="btn btn-warning" onclick="saveAsPDF()">保存为PDF</button>
-        <button class="btn btn-secondary" onclick="window.print()">打印合同</button>
-        <button class="btn btn-secondary" onclick="resetForm()">重置表单</button>
+    <!-- 功能按钮 -->
+    <div class="btn-group">
+        <button class="btn btn-primary" id="save-image-btn">保存为图片</button>
+        <button class="btn btn-success" id="save-pdf-btn">保存为PDF</button>
+        <button class="btn btn-warning" id="print-btn">打印合同</button>
     </div>
 
     <script>
-        const { jsPDF } = window.jspdf;
-        const today = new Date().toISOString().split('T')[0];
-        const alertEl = document.getElementById('alert');
-        // 所有设施的ID列表（与清单对应）
-        const facilityIds = [
-            'ac', 'fridge', 'rangehood', 'washer', 'waterheater', 
-            'router', 'bed', 'sofa', 'doors', 'wall', 
-            'floor', 'coffee-table', 'wardrobe', 'curtain'
-        ];
+        // 全局变量：防止图片重复保存
+        let isImageSaving = false;
+        let signatureInstances = { a: null, b: null };
 
-        // 初始化（无新逻辑，仅基础配置）
+        // 初始化日期默认值
         document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const sixMonthsLater = new Date();
+            sixMonthsLater.setMonth(today.getMonth() + 6);
+
+            // 格式化日期为YYYY-MM-DD
+            const formatDate = (date) => {
+                return date.toISOString().split('T')[0];
+            };
+
             // 设置默认日期
-            document.getElementById('lease-start').value = today;
-            const endDate = new Date();
-            endDate.setMonth(endDate.getMonth() + 6);
-            document.getElementById('lease-end').value = endDate.toISOString().split('T')[0];
-            document.getElementById('sign-dateA').value = today;
-            document.getElementById('sign-dateB').value = today;
+            const startDateVal = formatDate(today);
+            const endDateVal = formatDate(sixMonthsLater);
             
-            // 设施勾选框交互：勾选/取消时同步标记（仅内存中，不显示）
-            facilityIds.forEach(id => {
-                const checkbox = document.getElementById(`facility-${id}`);
-                const mark = document.getElementById(`facility-${id}-mark`);
-                checkbox.addEventListener('change', () => {
-                    mark.textContent = checkbox.checked ? '√' : '×';
+            document.getElementById('lease-start').value = startDateVal;
+            document.getElementById('lease-end').value = endDateVal;
+            document.getElementById('sign-date-a').value = startDateVal;
+            document.getElementById('sign-date-b').value = startDateVal;
+
+            // 计算租赁月数
+            const start = new Date(startDateVal);
+            const end = new Date(endDateVal);
+            const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+            document.getElementById('lease-months').value = months;
+
+            // 监听日期变化，自动计算月数
+            const dateInputs = document.querySelectorAll('.lease-date');
+            dateInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const start = new Date(document.getElementById('lease-start').value);
+                    const end = new Date(document.getElementById('lease-end').value);
+                    if (start && end && end > start) {
+                        const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+                        document.getElementById('lease-months').value = diffMonths;
+                    }
                 });
             });
 
-            // 初始化签名板（保留原稳定逻辑）
-            initSignaturePad('signatureA');
-            initSignaturePad('signatureB');
+            // 初始化签名板（修复甲方签名问题）
+            initSignaturePad('a');
+            initSignaturePad('b');
+
+            // 绑定按钮事件（避免事件委托冲突）
+            document.getElementById('save-image-btn').addEventListener('click', function() {
+                if (validateForm() && !isImageSaving) {
+                    saveAsImage();
+                }
+            });
+
+            document.getElementById('save-pdf-btn').addEventListener('click', function() {
+                if (validateForm()) {
+                    saveAsPDF();
+                }
+            });
+
+            document.getElementById('print-btn').addEventListener('click', function() {
+                if (validateForm()) {
+                    window.print();
+                }
+            });
+
+            // 初始化必填字段数组
+            window.requiredFields = [
+                'partyA-name', 'partyA-tel', 'partyB-name', 'partyB-id', 
+                'partyB-tel', 'apartment-name', 'room-number', 'monthly-rent',
+                'deposit', 'lease-start', 'lease-end'
+            ];
         });
 
-        // 1. 签名功能（原稳定逻辑，无改动）
-        let isDrawing = false;
-        let currentSignature = null;
-        function initSignaturePad(id) {
-            const pad = document.getElementById(id);
-            const ctx = pad.getContext('2d');
-            pad.width = pad.offsetWidth;
-            pad.height = pad.offsetHeight;
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = '#000';
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, pad.width, pad.height);
+        /**
+         * 初始化签名板（修复甲方签名失效问题）
+         * @param {string} prefix - 签名板前缀（a:甲方，b:乙方）
+         */
+        function initSignaturePad(prefix) {
+            const canvas = document.getElementById(`signature-pad-${prefix}`);
+            if (!canvas) return;
 
-            // 鼠标事件
-            pad.addEventListener('mousedown', (e) => {
+            const ctx = canvas.getContext('2d');
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+
+            // 设置画布分辨率（修复高清屏模糊问题）
+            const setCanvasDimensions = () => {
+                const rect = canvas.getBoundingClientRect();
+                // 保存当前绘制内容
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                tempCtx.drawImage(canvas, 0, 0);
+
+                // 重新设置画布尺寸
+                canvas.width = rect.width * window.devicePixelRatio;
+                canvas.height = rect.height * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+                // 恢复绘制内容
+                ctx.drawImage(tempCanvas, 0, 0);
+            };
+
+            // 初始化尺寸
+            setCanvasDimensions();
+            window.addEventListener('resize', setCanvasDimensions);
+
+            // 开始绘制
+            const startDrawing = (e) => {
                 isDrawing = true;
-                currentSignature = id;
-                const rect = pad.getBoundingClientRect();
+                const { x, y } = getCanvasCoordinates(e, canvas);
+                lastX = x;
+                lastY = y;
+                // 绘制起始点（修复点按无反应问题）
                 ctx.beginPath();
-                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-            });
-            pad.addEventListener('mousemove', (e) => {
-                if (!isDrawing || currentSignature !== id) return;
-                const rect = pad.getBoundingClientRect();
-                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-                ctx.stroke();
-            });
-            pad.addEventListener('mouseup', () => isDrawing = false);
-            pad.addEventListener('mouseout', () => isDrawing = false);
+                ctx.arc(x, y, 1, 0, 2 * Math.PI);
+                ctx.fillStyle = '#000';
+                ctx.fill();
+            };
 
-            // 触摸事件
-            pad.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                isDrawing = true;
-                currentSignature = id;
-                const rect = pad.getBoundingClientRect();
-                const touch = e.touches[0];
-                ctx.beginPath();
-                ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-            }, { passive: false });
-            pad.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                if (!isDrawing || currentSignature !== id) return;
-                const rect = pad.getBoundingClientRect();
-                const touch = e.touches[0];
-                ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                ctx.stroke();
-            }, { passive: false });
-            pad.addEventListener('touchend', () => isDrawing = false, { passive: false });
-        }
-
-        // 清除签名（原逻辑）
-        function clearSignature(type) {
-            const pad = document.getElementById(`signature${type}`);
-            const ctx = pad.getContext('2d');
-            ctx.clearRect(0, 0, pad.width, pad.height);
-            ctx.fillRect(0, 0, pad.width, pad.height);
-        }
-
-        // 2. 提示框功能（原逻辑）
-        function showAlert(message, isError = false) {
-            alertEl.className = 'alert ' + (isError ? 'alert-error' : 'alert-success');
-            alertEl.textContent = message;
-            setTimeout(() => {
-                alertEl.className = 'alert';
-            }, 3000);
-        }
-
-        // 3. 准备渲染内容（核心：设施清单替换为√×，无新BUG）
-        function prepareRenderContent() {
-            const original = document.getElementById('contract-container');
-            const clone = original.cloneNode(true);
-            if (!clone) throw new Error('无法克隆合同内容');
-
-            // 3.1 替换普通输入框为文本（原逻辑，无改动）
-            const textInputs = clone.querySelectorAll('input:not([type="checkbox"], [type="date"])');
-            textInputs.forEach(input => {
-                const textEl = document.createElement('span');
-                textEl.className = 'form-text';
-                textEl.textContent = input.value || '（未填写）';
-                input.parentNode.replaceChild(textEl, input);
-            });
-
-            // 3.2 替换日期输入框为文本（原逻辑，无改动）
-            const dateInputs = clone.querySelectorAll('input[type="date"]');
-            dateInputs.forEach(input => {
-                const textEl = document.createElement('span');
-                textEl.className = 'form-text';
-                textEl.textContent = input.value || '（未填写）';
-                input.parentNode.replaceChild(textEl, input);
-            });
-
-            // 3.3 设施清单处理（核心简化，无保存标记）
-            facilityIds.forEach(id => {
-                const cloneCheckbox = clone.getElementById(`facility-${id}`);
-                const cloneMark = clone.getElementById(`facility-${id}-mark`);
-                const cloneCheckboxParent = cloneCheckbox.closest('.facility-checkbox');
+            // 绘制过程
+            const draw = (e) => {
+                if (!isDrawing) return;
+                const { x, y } = getCanvasCoordinates(e, canvas);
                 
-                // 隐藏勾选框，显示√×标记
-                cloneCheckboxParent.style.display = 'none';
-                cloneMark.style.display = 'inline-block';
-            });
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#000';
+                ctx.stroke();
+                
+                lastX = x;
+                lastY = y;
+            };
 
-            // 3.4 复制签名板内容（原逻辑，无改动）
-            const signatures = clone.querySelectorAll('.signature-pad');
-            signatures.forEach((clonePad, i) => {
-                const originalPad = document.querySelectorAll('.signature-pad')[i];
-                const originalCtx = originalPad.getContext('2d');
-                const cloneCtx = clonePad.getContext('2d');
-                const imageData = originalCtx.getImageData(0, 0, originalPad.width, originalPad.height);
-                clonePad.width = originalPad.width;
-                clonePad.height = originalPad.height;
-                cloneCtx.putImageData(imageData, 0, 0);
-            });
+            // 结束绘制
+            const stopDrawing = () => {
+                isDrawing = false;
+            };
 
-            return clone;
-        }
+            // 解绑原有事件（防止重复绑定）
+            canvas.removeEventListener('mousedown', startDrawing);
+            canvas.removeEventListener('mousemove', draw);
+            canvas.removeEventListener('mouseup', stopDrawing);
+            canvas.removeEventListener('mouseout', stopDrawing);
+            canvas.removeEventListener('touchstart', handleTouchStart);
+            canvas.removeEventListener('touchmove', handleTouchMove);
+            canvas.removeEventListener('touchend', stopDrawing);
+            canvas.removeEventListener('touchcancel', stopDrawing);
 
-        // 4. 获取文件名（原逻辑）
-        function getFileName() {
-            const address = document.getElementById('house-address').value.trim() || '未知小区';
-            const room = document.getElementById('house-room').value.trim() || '未知室号';
-            return `${address}${room}租房合同`;
-        }
+            // 绑定鼠标事件
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
 
-        // 5. 验证签名（原逻辑）
-        function isSignatureValid(type) {
-            const pad = document.getElementById(`signature${type}`);
-            const ctx = pad.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, pad.width, pad.height);
-            const data = imageData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                if (data[i+3] > 0 && !(data[i] === 255 && data[i+1] === 255 && data[i+2] === 255)) {
-                    return true;
-                }
-            }
-            return false;
-        }
+            // 绑定触摸事件（修复移动端签名）
+            canvas.addEventListener('touchstart', handleTouchStart);
+            canvas.addEventListener('touchmove', handleTouchMove);
+            canvas.addEventListener('touchend', stopDrawing);
+            canvas.addEventListener('touchcancel', stopDrawing);
 
-        // 6. 保存为图片（原稳定逻辑，无新改动）
-        function saveAsImage() {
-            if (!isSignatureValid('A') || !isSignatureValid('B')) {
-                showAlert('请先完成甲乙双方的手写签名！', true);
-                return;
-            }
+            // 存储签名实例
+            signatureInstances[prefix] = { canvas, ctx, isDrawing, lastX, lastY };
 
-            const buttons = document.querySelector('.btn-group');
-            buttons.classList.add('hidden');
-            showAlert('正在生成图片，请稍候...');
-
-            try {
-                const renderContent = prepareRenderContent();
-                renderContent.style.position = 'fixed';
-                renderContent.style.top = '-9999px';
-                document.body.appendChild(renderContent);
-
-                html2canvas(renderContent, {
-                    scale: 1.5,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                }).then(canvas => {
-                    // Blob格式下载，避免失败
-                    canvas.toBlob(blob => {
-                        const link = document.createElement('a');
-                        link.download = `${getFileName()}.png`;
-                        link.href = URL.createObjectURL(blob);
-                        link.click();
-                        URL.revokeObjectURL(link.href);
-                        showAlert('图片保存成功！');
-                    });
-
-                    document.body.removeChild(renderContent);
-                    buttons.classList.remove('hidden');
-                }).catch(err => {
-                    console.error('图片生成失败：', err);
-                    showAlert('图片保存失败，请重试！', true);
-                    document.body.removeChild(renderContent);
-                    buttons.classList.remove('hidden');
+            // 触摸事件处理函数
+            function handleTouchStart(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
                 });
-            } catch (err) {
-                console.error('图片保存错误：', err);
-                showAlert('图片保存失败，请重试！', true);
-                buttons.classList.remove('hidden');
+                canvas.dispatchEvent(mouseEvent);
+            }
+
+            function handleTouchMove(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
             }
         }
 
-        // 7. 保存为PDF（原稳定逻辑，无新改动）
-        function saveAsPDF() {
-            if (!isSignatureValid('A') || !isSignatureValid('B')) {
-                showAlert('请先完成甲乙双方的手写签名！', true);
-                return;
-            }
+        /**
+         * 获取画布坐标（修复签名位置偏移）
+         * @param {Event} e - 事件对象
+         * @param {HTMLCanvasElement} canvas - 画布元素
+         * @returns {Object} 坐标对象
+         */
+        function getCanvasCoordinates(e, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) / (rect.width / canvas.width) * (canvas.width / window.devicePixelRatio),
+                y: (e.clientY - rect.top) / (rect.height / canvas.height) * (canvas.height / window.devicePixelRatio)
+            };
+        }
 
-            const buttons = document.querySelector('.btn-group');
-            buttons.classList.add('hidden');
-            showAlert('正在生成PDF，请稍候...');
+        /**
+         * 清除签名（修复清除按钮跳转问题）
+         * @param {string} prefix - 签名板前缀（a:甲方，b:乙方）
+         */
+        function clearSignature(prefix) {
+            // 阻止事件冒泡和默认行为
+            event.stopPropagation();
+            event.preventDefault();
+
+            const instance = signatureInstances[prefix];
+            if (instance && instance.ctx) {
+                const { ctx, canvas } = instance;
+                // 清除整个画布
+                ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+                // 重置绘制状态
+                instance.isDrawing = false;
+                instance.lastX = 0;
+                instance.lastY = 0;
+            }
+        }
+
+        /**
+         * 保存为图片（修复重复保存问题）
+         */
+        function saveAsImage() {
+            if (isImageSaving) return; // 防止重复触发
 
             try {
-                const renderContent = prepareRenderContent();
-                renderContent.style.position = 'fixed';
-                renderContent.style.top = '-9999px';
-                document.body.appendChild(renderContent);
+                isImageSaving = true;
+                const saveBtn = document.getElementById('save-image-btn');
+                const originalText = saveBtn.innerText;
+                saveBtn.innerText = '保存中...';
+                saveBtn.disabled = true;
 
-                html2canvas(renderContent, {
-                    scale: 1.5,
+                // 获取文件名信息
+                const apartmentName = document.getElementById('apartment-name').value || '未知公寓';
+                const roomNumber = document.getElementById('room-number').value || '未知房号';
+                const startDate = document.getElementById('lease-start').value || '未知日期';
+                const fileName = `${apartmentName}${roomNumber}_租赁合同_${startDate}`;
+
+                // 配置html2canvas（修复输入框遮挡）
+                html2canvas(document.getElementById('contract-content'), {
+                    scale: 2, // 高清截图
                     useCORS: true,
                     logging: false,
-                    backgroundColor: '#ffffff'
+                    allowTaint: false,
+                    backgroundColor: '#fff',
+                    // 确保所有元素都被渲染
+                    windowWidth: document.getElementById('contract-content').offsetWidth,
+                    windowHeight: document.getElementById('contract-content').offsetHeight,
+                    // 修复输入框内容渲染
+                    onclone: (clonedDoc) => {
+                        const clonedInputs = clonedDoc.querySelectorAll('input, textarea');
+                        clonedInputs.forEach(input => {
+                            // 复制输入框值到value属性
+                            if (input.type === 'text' || input.type === 'tel' || input.type === 'number' || input.type === 'date' || input.tagName === 'TEXTAREA') {
+                                input.setAttribute('value', input.value);
+                            }
+                            // 修复复选框状态
+                            if (input.type === 'checkbox') {
+                                input.checked = input.checked;
+                            }
+                            // 确保输入框可见
+                            input.style.opacity = '1';
+                            input.style.visibility = 'visible';
+                            input.style.position = 'relative';
+                            input.style.zIndex = '9999';
+                        });
+                    }
                 }).then(canvas => {
-                    const pdf = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'mm',
-                        format: 'a4'
-                    });
-                    const imgWidth = 210;
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.download = `${fileName}.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0); // 1.0表示最高质量
+
+                    // 触发下载
+                    const event = new MouseEvent('click');
+                    link.dispatchEvent(event);
+
+                    // 延迟清理，确保下载完成
+                    setTimeout(() => {
+                        URL.revokeObjectURL(link.href); // 释放内存
+                        isImageSaving = false;
+                        saveBtn.innerText = originalText;
+                        saveBtn.disabled = false;
+                    }, 1000);
+                }).catch(error => {
+                    console.error('保存图片失败：', error);
+                    alert('保存图片失败，请重试！');
+                    isImageSaving = false;
+                    saveBtn.innerText = originalText;
+                    saveBtn.disabled = false;
+                });
+            } catch (error) {
+                console.error('保存图片异常：', error);
+                alert('保存图片异常，请重试！');
+                isImageSaving = false;
+                const saveBtn = document.getElementById('save-image-btn');
+                saveBtn.innerText = '保存为图片';
+                saveBtn.disabled = false;
+            }
+        }
+
+        /**
+         * 保存为PDF（修复输入框遮挡）
+         */
+        function saveAsPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4'); // 纵向A4纸
+
+                // 获取文件名信息
+                const apartmentName = document.getElementById('apartment-name').value || '未知公寓';
+                const roomNumber = document.getElementById('room-number').value || '未知房号';
+                const startDate = document.getElementById('lease-start').value || '未知日期';
+                const fileName = `${apartmentName}${roomNumber}_租赁合同_${startDate}`;
+
+                const saveBtn = document.getElementById('save-pdf-btn');
+                const originalText = saveBtn.innerText;
+                saveBtn.innerText = '生成中...';
+                saveBtn.disabled = true;
+
+                // 配置html2canvas
+                html2canvas(document.getElementById('contract-content'), {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: false,
+                    backgroundColor: '#fff',
+                    windowWidth: document.getElementById('contract-content').offsetWidth,
+                    windowHeight: document.getElementById('contract-content').offsetHeight,
+                    onclone: (clonedDoc) => {
+                        // 修复输入框内容渲染
+                        const clonedInputs = clonedDoc.querySelectorAll('input, textarea');
+                        clonedInputs.forEach(input => {
+                            if (input.type === 'text' || input.type === 'tel' || input.type === 'number' || input.type === 'date' || input.tagName === 'TEXTAREA') {
+                                input.setAttribute('value', input.value);
+                            }
+                            if (input.type === 'checkbox') {
+                                input.checked = input.checked;
+                            }
+                            input.style.opacity = '1';
+                            input.style.visibility = 'visible';
+                        });
+                    }
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95); // 0.95平衡质量和大小
+                    const imgWidth = 210; // A4宽度（mm）
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                    canvas.toBlob(blob => {
-                        const imgData = URL.createObjectURL(blob);
-                        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-                        pdf.save(`${getFileName()}.pdf`);
-                        URL.revokeObjectURL(imgData);
-                        showAlert('PDF保存成功！');
-                    });
+                    // 添加图片到PDF
+                    doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                    // 保存PDF
+                    doc.save(`${fileName}.pdf`);
 
-                    document.body.removeChild(renderContent);
-                    buttons.classList.remove('hidden');
-                }).catch(err => {
-                    console.error('PDF生成失败：', err);
-                    showAlert('PDF保存失败，请重试！', true);
-                    document.body.removeChild(renderContent);
-                    buttons.classList.remove('hidden');
+                    // 恢复按钮状态
+                    setTimeout(() => {
+                        saveBtn.innerText = originalText;
+                        saveBtn.disabled = false;
+                    }, 800);
+                }).catch(error => {
+                    console.error('生成PDF失败：', error);
+                    alert('生成PDF失败，请重试！');
+                    saveBtn.innerText = originalText;
+                    saveBtn.disabled = false;
                 });
-            } catch (err) {
-                console.error('PDF保存错误：', err);
-                showAlert('PDF保存失败，请重试！', true);
-                buttons.classList.remove('hidden');
+            } catch (error) {
+                console.error('生成PDF异常：', error);
+                alert('生成PDF异常，请重试！');
+                const saveBtn = document.getElementById('save-pdf-btn');
+                saveBtn.innerText = '保存为PDF';
+                saveBtn.disabled = false;
             }
         }
 
-        // 8. 重置表单（原逻辑，含设施重置）
-        function resetForm() {
-            if (confirm('确定要重置所有填写内容吗？')) {
-                // 重置普通输入框
-                document.querySelectorAll('input:not([type="checkbox"])').forEach(el => {
-                    el.value = el.defaultValue;
-                });
-                // 重置设施勾选框
-                facilityIds.forEach(id => {
-                    const checkbox = document.getElementById(`facility-${id}`);
-                    const mark = document.getElementById(`facility-${id}-mark`);
-                    checkbox.checked = true;
-                    mark.textContent = '√';
-                });
-                // 重置签名
-                ['A', 'B'].forEach(type => clearSignature(type));
-                showAlert('表单已重置！');
+        /**
+         * 表单验证
+         * @returns {boolean} 验证结果
+         */
+        function validateForm() {
+            const requiredFields = window.requiredFields || [];
+            let isValid = true;
+
+            requiredFields.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                if (!input) return;
+
+                const value = input.value.trim();
+                if (!value) {
+                    // 标记错误
+                    input.style.borderColor = 'red';
+                    input.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.2)';
+                    isValid = false;
+                } else {
+                    // 恢复正常样式
+                    input.style.borderColor = '#ddd';
+                    input.style.boxShadow = 'none';
+                }
+            });
+
+            if (!isValid) {
+                alert('请填写所有必填字段（红色边框为未填写项）！');
+                // 滚动到第一个错误字段
+                const firstError = document.querySelector('input[style*="border-color: red"], textarea[style*="border-color: red"]');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
             }
+
+            return isValid;
         }
+
+        // 输入框焦点/失焦事件（优化用户体验）
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputFields = document.querySelectorAll('input, textarea');
+            inputFields.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.borderColor = '#3498db';
+                    this.style.boxShadow = '0 0 0 2px rgba(52, 152, 219, 0.2)';
+                });
+
+                input.addEventListener('blur', function() {
+                    const fieldId = this.id;
+                    const isRequired = window.requiredFields && window.requiredFields.includes(fieldId);
+                    const hasValue = this.value.trim() !== '';
+
+                    if (isRequired && !hasValue) {
+                        this.style.borderColor = 'red';
+                        this.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.2)';
+                    } else {
+                        this.style.borderColor = '#ddd';
+                        this.style.boxShadow = 'none';
+                    }
+                });
+            });
+        });
+
+        // 计算日租金（辅助功能）
+        document.getElementById('monthly-rent').addEventListener('input', function() {
+            const monthlyRent = parseInt(this.value) || 0;
+            const dailyRent = (monthlyRent / 30).toFixed(2);
+            console.log(`日租金：${dailyRent}元`);
+        });
+
+        // 自动填充示例数据（测试用）
+        function fillSampleData() {
+            document.getElementById('partyA-name').value = '张三';
+            document.getElementById('partyA-tel').value = '13800138000';
+            document.getElementById('partyB-name').value = '李四';
+            document.getElementById('partyB-id').value = '440101199001011234';
+            document.getElementById('partyB-tel').value = '13900139000';
+            document.getElementById('partyB-emergency').value = '王五 13700137000';
+            document.getElementById('partyB-residents').value = '李四（本人）';
+            document.getElementById('apartment-name').value = '阳光花园';
+            document.getElementById('room-number').value = '3栋502';
+            document.getElementById('monthly-rent').value = '3500';
+            document.getElementById('management-fee').value = '150';
+            document.getElementById('deposit').value = '7000';
+            document.getElementById('card-deposit').value = '50';
+            document.getElementById('remote-deposit').value = '30';
+            document.getElementById('electric-base').value = '1200';
+            document.getElementById('water-base').value = '350';
+            document.getElementById('other-items').value = '燃气灶、微波炉';
+        }
+
+        // 快捷键支持（F5填充示例数据）
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F5' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                fillSampleData();
+                alert('已填充示例数据！');
+            }
+        });
+
+        // 窗口大小变化时重新初始化签名板
+        window.addEventListener('resize', function() {
+            setTimeout(() => {
+                initSignaturePad('a');
+                initSignaturePad('b');
+            }, 300);
+        });
     </script>
 </body>
 </html>
